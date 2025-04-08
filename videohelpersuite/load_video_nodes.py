@@ -465,6 +465,13 @@ class LoadVideoUpload:
 
 
 class LoadVideoPath:
+    testcount = 0
+
+    def __init__(self):
+        self.isCounting = False
+        self.my_skip_first_frames = 0
+        self.my_frame_load_cap = 0
+
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -498,13 +505,25 @@ class LoadVideoPath:
     def load_video(self, **kwargs):
         if kwargs['video'] is None or validate_path(kwargs['video']) != True:
             raise Exception("video is not a valid path: " + kwargs['video'])
+
         if is_url(kwargs['video']):
             kwargs['video'] = try_download_video(kwargs['video']) or kwargs['video']
+
+        # reset if frame_load_cap is different
+        if kwargs['frame_load_cap'] != 1 and kwargs['frame_load_cap'] == self.my_frame_load_cap:
+            self.my_skip_first_frames += self.my_frame_load_cap
+            kwargs['skip_first_frames'] = self.my_skip_first_frames
+        else:
+            self.my_skip_first_frames = kwargs['skip_first_frames']
+            self.my_frame_load_cap = kwargs['frame_load_cap']
+
         return load_video(**kwargs)
 
     @classmethod
     def IS_CHANGED(s, video, **kwargs):
-        return hash_path(video)
+        #  return hash_path(video)
+        LoadVideoPath.testcount += 1
+        return LoadVideoPath.testcount
 
     @classmethod
     def VALIDATE_INPUTS(s, video):
